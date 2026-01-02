@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   api:
-    image: aryarajalves/api-cria-servidor:latest
+    image: aryarajalves/servidor-automatico:1.0.0
     build: .
     hostname: "{{.Service.Name}}.{{.Task.Slot}}"
     volumes:

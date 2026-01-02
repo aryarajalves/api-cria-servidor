@@ -11,7 +11,7 @@ env:
   # Use docker.io para Docker Hub se estiver vazio
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: aryarajalves/api-cria-servidor
+  IMAGE_NAME: aryarajalves/servidor-automatico
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=1.0.0
             type=sha
 
       # Build e Push da imagem Docker
