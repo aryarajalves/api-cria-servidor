@@ -1,4 +1,4 @@
-const API_URL = "http://servidorautomatico.aryaraj.shop";
+const API_URL = "http://178.156.149.250:8000";
 
 // --- STATE & UTILS ---
 let currentModalAction = null;

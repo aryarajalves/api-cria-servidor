@@ -14,6 +14,16 @@ logging.basicConfig(level=logging.INFO)
 # Inicializa FastAPI
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class DNSRecordDeleteRequest(BaseModel):
     api_token: str
     zone_id: str

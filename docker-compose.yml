@@ -2,9 +2,14 @@ version: "3.7"
 
 services:
   api:
-    image: aryarajalves/servidor-automatico:1.0.0
+    image: aryarajalves/servidor-automatico:1.0.1
     build: .
     hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: host
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
     networks:

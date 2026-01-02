@@ -45,7 +45,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=1.0.0
+            type=raw,value=1.0.1
             type=sha
 
       # Build e Push da imagem Docker
