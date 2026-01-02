@@ -1,5 +1,7 @@
 # API Cria Servidor e Extensão Chrome
 
+![Docker Build & Push](https://github.com/aryarajalves/api-cria-servidor/actions/workflows/docker-publish.yml/badge.svg)
+
 Este projeto consiste em uma automação para facilitar a criação e configuração de servidores (VPS), gerenciando stacks via Portainer e DNS via Cloudflare, auxiliado por uma extensão do Google Chrome.
 
 ## 🚀 Funcionalidades
