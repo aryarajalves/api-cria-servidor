@@ -16,5 +16,5 @@ COPY . .
 # 6. Expor a porta 8000, que é a porta padrão que o Uvicorn usará
 EXPOSE 8000
 
-# O comando para iniciar a aplicação (CMD) será especificado no arquivo docker-compose.yml
-# para cada serviço individualmente.
+# Comando padrão para iniciar a aplicação
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

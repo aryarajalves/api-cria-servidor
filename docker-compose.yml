@@ -5,8 +5,8 @@ services:
     image: aryarajalves/servidor-automatico:1.0.0
     build: .
     hostname: "{{.Service.Name}}.{{.Task.Slot}}"
-    volumes:
-      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
     networks:
       - network_swarm_public
     deploy:
