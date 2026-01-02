@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Servidor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-item active" data-tab="tab-connection" title="Conexão">
+                <span class="icon">🔌</span>
+            </div>
+            <div class="sidebar-item" data-tab="tab-status" title="Status do Sistema">
+                <span class="icon">📊</span>
+            </div>
+            <div class="sidebar-item" data-tab="tab-dns" title="Gerenciador DNS">
+                <span class="icon">🌐</span>
+            </div>
+            <div class="sidebar-item" data-tab="tab-apps" title="Aplicativos">
+                <span class="icon">🚀</span>
+            </div>
+            <div class="sidebar-item" data-tab="tab-logs" title="Logs">
+                <span class="icon">📜</span>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="content">
+            <header>
+                <h1>AutoServer</h1>
+                <div id="connection-status-text">Desconectado</div>
+            </header>
+
+            <!-- Tab: Connection -->
+            <div id="tab-connection" class="tab-content active">
+                <!-- ... existing connection ... -->
+                <div class="card">
+                    <h2>Credenciais SSH</h2>
+                    <div class="input-group">
+                        <label>Host (IP)</label>
+                        <input type="text" id="host" placeholder="Ex: 192.168.1.10">
+                    </div>
+                    <div class="input-group">
+                        <label>Usuário</label>
+                        <input type="text" id="username" placeholder="root">
+                    </div>
+                    <div class="input-group">
+                        <label>Senha</label>
+                        <input type="password" id="password" placeholder="••••••">
+                    </div>
+                    <div class="input-group" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="save-creds" style="width: auto;">
+                        <label for="save-creds" style="margin: 0; cursor: pointer;">Lembrar credenciais</label>
+                    </div>
+                    <button id="btn-verify">Conectar e Verificar</button>
+                </div>
+            </div>
+
+            <!-- Tab: DNS (Cloudflare) -->
+            <div id="tab-dns" class="tab-content">
+                <div class="card">
+                    <h2>Automação DNS (Cloudflare)</h2>
+
+                    <!-- Token Input Section -->
+                    <div id="dns-token-section">
+                        <div class="input-group">
+                            <label>API Token Cloudflare</label>
+                            <input type="password" id="cf-api-token" placeholder="Token com permissão de Edit Zone">
+                        </div>
+                        <button id="btn-save-cf-token">Salvar Token</button>
+                    </div>
+
+                    <!-- DNS Manager Section (Hidden until token saved) -->
+                    <div id="dns-manager-section" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span style="font-size: 12px; color: var(--success-color);">☁ Token Salvo</span>
+                            <button id="btn-change-token" class="btn-small secondary"
+                                style="width: auto;">Alterar</button>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Zona (Domínio Base)</label>
+                            <select id="cf-zone-select" class="styled-select">
+                                <option value="" disabled selected>Carregando zonas...</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Nome (Subdomínio)</label>
+                            <div style="display: flex; gap: 5px; align-items: center;">
+                                <input type="text" id="cf-record-name" placeholder="ex: app">
+                                <span id="cf-zone-suffix" style="color: var(--text-secondary); font-size: 12px;"></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group" style="display: none;">
+                            <label>Endereço IP</label>
+                            <input type="text" id="cf-record-content" placeholder="IP do Servidor" readonly>
+                        </div>
+
+                        <div class="input-group" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="cf-proxied" style="width: auto;" checked>
+                            <label for="cf-proxied" style="margin: 0; cursor: pointer;">Proxy Cloudflare (CDN)</label>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button id="btn-create-dns" style="flex: 1;">Criar Registro DNS</button>
+                            <button id="btn-cancel-edit-dns" class="btn-small secondary"
+                                style="display: none; width: auto;">Cancelar</button>
+                        </div>
+
+                        <!-- Existing Records Section -->
+                        <div id="dns-list-container"
+                            style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: none;">
+                            <h3 style="font-size: 14px; margin-bottom: 10px;">Registros para este IP</h3>
+                            <div id="dns-records-list" style="font-size: 13px; max-height: 150px; overflow-y: auto;">
+                                <!-- Rendered items go here -->
+                            </div>
+                        </div>
+
+                        <!-- Existing Records Section -->
+                        <div id="dns-list-container"
+                            style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px; display: none;">
+                            <h3 style="font-size: 14px; margin-bottom: 10px;">Registros para este IP</h3>
+                            <div id="dns-records-list" style="font-size: 13px; max-height: 150px; overflow-y: auto;">
+                                <!-- Rendered items go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Status (New) -->
+            <div id="tab-status" class="tab-content">
+                <div class="card">
+                    <h2>Status do Sistema</h2>
+                    <div id="full-status-list">
+                        <p style="text-align: center; color: var(--text-secondary);">Conecte-se para ver o status.</p>
+                        <!-- Items will be populated by JS -->
+                        <!-- Example: -->
+                        <!-- 
+                        <div class="status-item">
+                            <span>Docker</span>
+                            <span class="badge-running">Instalado</span>
+                        </div>
+                        -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Applications -->
+            <div id="tab-apps" class="tab-content">
+
+                <!-- Infraestrutura Base -->
+                <div class="card">
+                    <h2>Infraestrutura Base</h2>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Instalar Docker</h3>
+                            <p>Engine e Dependências</p>
+                        </div>
+                        <button id="btn-install-docker" class="btn-small">Instalar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Iniciar Swarm</h3>
+                            <p>Cluster Manager</p>
+                        </div>
+                        <button id="btn-init-swarm" class="btn-small">Iniciar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Criar Rede</h3>
+                            <p>Overlay Network</p>
+                        </div>
+                        <button id="btn-create-network" class="btn-small">Criar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Instalar Ctop</h3>
+                            <p>Monitor de Containers</p>
+                        </div>
+                        <button id="btn-install-ctop" class="btn-small">Instalar</button>
+                    </div>
+                </div>
+
+                <!-- Core Apps -->
+                <div class="card">
+                    <h2>Core Apps</h2>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Traefik</h3>
+                            <p>Reverse Proxy</p>
+                        </div>
+                        <button id="btn-open-traefik-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Portainer</h3>
+                            <p>Docker Management</p>
+                        </div>
+                        <button id="btn-open-portainer-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                </div>
+
+                <!-- Bancos de Dados -->
+                <div class="card">
+                    <h2>Banco de Dados</h2>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Postgres</h3>
+                            <p>Banco Relacional</p>
+                        </div>
+                        <button id="btn-open-postgres-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Redis</h3>
+                            <p>Cache & Broker</p>
+                        </div>
+                        <button id="btn-install-redis" class="btn-small">Instalar</button>
+                    </div>
+
+                </div>
+
+                <!-- Aplicações -->
+                <div class="card">
+                    <h2>Aplicações</h2>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Baserow</h3>
+                            <p>No-Code Database</p>
+                        </div>
+                        <button id="btn-open-baserow-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>N8N</h3>
+                            <p>Workflow Automation</p>
+                        </div>
+                        <button id="btn-open-n8n-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Chatwoot</h3>
+                            <p>Customer Support</p>
+                        </div>
+                        <button id="btn-open-chatwoot-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>RabbitMQ</h3>
+                            <p>Message Queue</p>
+                        </div>
+                        <button id="btn-open-rabbitmq-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                    <div class="app-item">
+                        <div class="app-info">
+                            <h3>Minio</h3>
+                            <p>S3 Storage Object</p>
+                        </div>
+                        <button id="btn-open-minio-modal" class="btn-small secondary">Configurar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Logs -->
+            <div id="tab-logs" class="tab-content">
+                <div class="card">
+                    <h2>Logs de Operação</h2>
+                    <div id="log-container"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2 id="modal-title">Configurar Aplicação</h2>
+            <div id="modal-content">
+                <!-- Inputs injected here -->
+            </div>
+            <div class="modal-actions">
+                <button id="btn-cancel-modal" class="secondary">Cancelar</button>
+                <button id="btn-confirm-modal">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="progress-overlay" style="display: none;">
+        <div id="progress-spinner" class="spinner"></div>
+        <div id="progress-icon" style="display: none;"></div>
+        <h2 id="progress-title">Instalando...</h2>
+        <p id="progress-message">Por favor aguarde, isso pode levar alguns minutos.</p>
+        <button id="btn-close-progress" style="display: none;">Fechar</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

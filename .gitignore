@@ -1,0 +1,26 @@
+# Arquivos de ambiente
+# NUNCA envie este arquivo para o repositório! Ele contém segredos.
+.env
+
+# Dependências e ambientes virtuais
+venv/
+.venv/
+env/
+.env.*/
+*.pyc
+
+# Caches e artefatos do Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# Arquivos de configuração de IDEs/Editores
+.vscode/
+.idea/
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db

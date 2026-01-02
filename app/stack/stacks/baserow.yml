@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  baserow:
+    image: baserow/baserow:1.31.1
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    entrypoint: /baserow.sh
+    command: start
+    volumes:
+    - baserow_data:/baserow/data
+    networks:
+    - network_swarm_public
+    environment:
+    - BASEROW_PUBLIC_URL=https://{BaseUrl_Baserow}
+    - DATABASE_NAME=baserow
+    - DATABASE_HOST=postgres
+    - DATABASE_PORT=5432
+    - DATABASE_USER=postgres
+    - DATABASE_PASSWORD={Senha_Baserow}
+    - SECRET_KEY:7c703f7fda8347c0b0b49fee845e947c
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+        - node.role == manager
+      resources:
+        # configura os limites de recursos do serviço do postgres
+        limits:
+          # configura o limite de CPU do serviço do postgres
+          cpus: "1"
+          # configura o limite de memória do serviço do postgres
+          memory: 4096M
+      labels:
+      - traefik.enable=1
+      - traefik.http.routers.baserow.rule=Host(`{BaseUrl_Baserow}`)
+      - traefik.http.routers.baserow.entrypoints=websecure
+      - traefik.http.routers.baserow.priority=1
+      - traefik.http.routers.baserow.tls.certresolver=letsencryptresolver
+      - traefik.http.routers.baserow.service=baserow
+      - traefik.http.services.baserow.loadbalancer.server.port=80
+      - traefik.http.services.baserow.loadbalancer.passHostHeader=1
+volumes:
+  baserow_data:
+    external: true
+    name: baserow_data
+networks:
+  network_swarm_public:
+    name: network_swarm_public
+    external: true

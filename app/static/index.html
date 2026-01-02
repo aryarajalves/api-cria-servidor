@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoServer Deployer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-server"></i>
+                <span>AutoServer</span>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-grid-2"></i> Dashboard
+                </button>
+                <button class="nav-item" data-tab="logs">
+                    <i class="fa-solid fa-terminal"></i> Logs
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-gear"></i> Configurações
+                </button>
+            </nav>
+            <div class="connection-status" id="connectionStatus">
+                <div class="status-indicator disconnected"></div>
+                <span id="statusText">Desconectado</span>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Painel de Controle</h1>
+                <div class="server-info" id="serverInfoDisplay" style="display: none;">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span id="connectedHost">---</span>
+                </div>
+            </header>
+
+            <div id="dashboard-view" class="view active">
+                <div class="connection-card" id="connectionCard">
+                    <h2><i class="fa-solid fa-plug"></i> Conexão com Servidor</h2>
+                    <p>Insira as credenciais do servidor SSH para iniciar o gerenciamento.</p>
+                    <form id="connectionForm">
+                        <div class="form-group">
+                            <label for="host">Host (IP)</label>
+                            <input type="text" id="host" placeholder="ex: 192.168.1.100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Usuário</label>
+                            <input type="text" id="username" placeholder="ex: root" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Senha</label>
+                            <input type="password" id="password" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn-primary">
+                            Conectar <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="services-grid" id="servicesGrid" style="display: none;">
+                    <!-- Docker Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-brands fa-docker icon-docker"></i>
+                            <h3>Docker</h3>
+                        </div>
+                        <p>Instalação e configuração do Docker Engine.</p>
+                        <div class="card-actions">
+                            <button id="btn-install-docker" class="btn-action"
+                                onclick="installDocker()">Instalar</button>
+                        </div>
+                    </div>
+
+                    <!-- Swarm Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-layer-group icon-swarm"></i>
+                            <h3>Swarm Init</h3>
+                        </div>
+                        <p>Inicializar cluster Docker Swarm.</p>
+                        <div class="card-actions">
+                            <button id="btn-init-swarm" class="btn-action" onclick="initSwarm()">Inicializar</button>
+                        </div>
+                    </div>
+
+                    <!-- Network Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-network-wired icon-network"></i>
+                            <h3>Rede Overlay</h3>
+                        </div>
+                        <p>Criar rede 'network_swarm_public'.</p>
+                        <div class="card-actions">
+                            <button id="btn-create-network" class="btn-action" onclick="createNetwork()">Criar
+                                Rede</button>
+                        </div>
+                    </div>
+
+                    <!-- Traefik Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-route icon-traefik"></i>
+                            <h3>Traefik</h3>
+                        </div>
+                        <p>Proxy reverso e Load Balancer.</p>
+                        <div class="input-group">
+                            <input type="email" id="traefikEmail" placeholder="Email para SSL">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-traefik" class="btn-action"
+                                onclick="installTraefik()">Instalar</button>
+                            <button id="btn-update-traefik" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('traefik')">Atualizar</button>
+                            <button class="btn-action secondary" onclick="restartStack('traefik')">Reiniciar</button>
+                        </div>
+                    </div>
+
+                    <!-- Portainer Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-box-open icon-portainer"></i>
+                            <h3>Portainer</h3>
+                        </div>
+                        <p>Gerenciamento visual de containers.</p>
+                        <div class="input-group">
+                            <input type="text" id="portainerHost" placeholder="Domínio (ex: portainer.com)">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-portainer" class="btn-action"
+                                onclick="installPortainer()">Instalar</button>
+                            <button id="btn-update-portainer" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('portainer')">Atualizar</button>
+                            <button class="btn-action secondary" onclick="restartStack('portainer')">Reiniciar</button>
+                        </div>
+                    </div>
+
+                    <!-- Redis Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-database icon-redis"></i>
+                            <h3>Redis</h3>
+                        </div>
+                        <p>Banco de dados em memória.</p>
+                        <div class="card-actions">
+                            <button id="btn-install-redis" class="btn-action" onclick="installRedis()">Instalar</button>
+                            <button id="btn-update-redis" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('redis')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- Postgres Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-database icon-postgres"></i>
+                            <h3>Postgres</h3>
+                        </div>
+                        <p>Banco de dados relacional.</p>
+                        <div class="input-group">
+                            <input type="password" id="postgresPwd" placeholder="Senha do Banco">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-postgres" class="btn-action"
+                                onclick="installPostgres()">Instalar</button>
+                            <button id="btn-update-postgres" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('postgres')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- N8N Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-bolt icon-n8n"></i>
+                            <h3>N8N</h3>
+                        </div>
+                        <p>Automação de fluxo de trabalho.</p>
+                        <div class="input-group">
+                            <input type="text" id="n8nHost" placeholder="Domínio (ex: n8n.com)">
+                            <input type="text" id="n8nWebhook" placeholder="Webhook URL">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-n8n" class="btn-action" onclick="installN8N()">Instalar</button>
+                            <button id="btn-update-n8n" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('n8n')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- Chatwoot Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-comments icon-chatwoot"></i>
+                            <h3>Chatwoot</h3>
+                        </div>
+                        <p>Plataforma de atendimento ao cliente.</p>
+                        <div class="input-group">
+                            <input type="text" id="chatwootUrl" placeholder="URL (ex: chat.com)">
+                            <input type="password" id="postgresPwdChatwoot" placeholder="Senha do Postgres">
+                            <input type="text" id="minioUserChatwoot" placeholder="Usuário Minio">
+                            <input type="password" id="minioPassChatwoot" placeholder="Senha Minio">
+                            <input type="text" id="minioUrlChatwoot" placeholder="URL Pública Minio">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-chatwoot" class="btn-action"
+                                onclick="installChatwoot()">Instalar</button>
+                            <button id="btn-update-chatwoot" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('chatwoot')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- RabbitMQ Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-envelope icon-rabbitmq"></i>
+                            <h3>RabbitMQ</h3>
+                        </div>
+                        <p>Message Broker.</p>
+                        <div class="input-group">
+                            <input type="text" id="rabbitUser" placeholder="Usuário">
+                            <input type="password" id="rabbitPass" placeholder="Senha">
+                            <input type="text" id="rabbitUrl" placeholder="URL (ex: rabbit.com)">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-rabbitmq" class="btn-action"
+                                onclick="installRabbitMQ()">Instalar</button>
+                            <button id="btn-update-rabbitmq" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('rabbitmq')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- Minio Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-hdd icon-minio"></i>
+                            <h3>Minio</h3>
+                        </div>
+                        <p>Object Storage (S3 Compatible).</p>
+                        <div class="input-group">
+                            <input type="text" id="minioUser" placeholder="Usuário">
+                            <input type="password" id="minioPass" placeholder="Senha">
+                            <input type="text" id="minioUrlPublic" placeholder="URL Pública">
+                            <input type="text" id="minioUrlPrivate" placeholder="URL Privada (Docker)">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-minio" class="btn-action" onclick="installMinio()">Instalar</button>
+                            <button id="btn-update-minio" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('minio')">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <!-- Baserow Card -->
+                    <div class="service-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-table icon-baserow"></i>
+                            <h3>Baserow</h3>
+                        </div>
+                        <p>Banco de dados No-Code.</p>
+                        <div class="input-group">
+                            <input type="text" id="baserowUrl" placeholder="URL (ex: baserow.com)">
+                        </div>
+                        <div class="card-actions">
+                            <button id="btn-install-baserow" class="btn-action"
+                                onclick="installBaserow()">Instalar</button>
+                            <button id="btn-update-baserow" class="btn-action secondary" style="display: none;"
+                                onclick="openEnvModal('baserow')">Atualizar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logs-view" class="view">
+                <div class="logs-container">
+                    <div class="logs-header">
+                        <h2>Logs de Execução</h2>
+                        <button class="btn-small" onclick="clearLogs()">Limpar</button>
+                    </div>
+                    <div class="logs-content" id="logsContent">
+                        <div class="log-entry system">Bem-vindo ao AutoServer Deployer. Conecte-se para começar.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="envModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Variáveis de Ambiente</h2>
+                <span class="close-modal" onclick="closeEnvModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Edite as variáveis de ambiente para <span id="modalStackName"></span>.</p>
+                <div id="envVarsContainer">
+                    <!-- Inputs will be generated here -->
+                </div>
+                <button class="btn-action secondary" onclick="addEnvVarField()">+ Adicionar Variável</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="saveEnvVars()">Salvar Alterações</button>
+                <button class="btn-action secondary" onclick="closeEnvModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none;">
+                <div
+                    style="width: 60px; height: 60px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-check" style="font-size: 30px; color: var(--success);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 10px;">Instalação Concluída!</h2>
+                <p id="successMessage" style="color: var(--text-muted);">O serviço foi instalado com sucesso.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none; padding-bottom: 2rem;">
+                <button class="btn-primary" onclick="closeSuccessModal()"
+                    style="width: auto; padding: 10px 30px;">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

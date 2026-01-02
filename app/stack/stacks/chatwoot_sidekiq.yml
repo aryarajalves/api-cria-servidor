@@ -1,0 +1,108 @@
+services:
+  # Definição do Nome do Serviço de Background
+  chatwoot_sidekiq:
+    # imagem oficial do chatwoot
+    image: chatwoot/chatwoot:v3.13.0
+    # Define o hotname do container
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    # comando padrão para subir o servidor web
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    # configura os volumes do chatwoot (compartilhado)
+    volumes:
+      - chatwoot_data:/app/storage # arquivos do usuário
+    # configura a rede do serviço
+    networks:
+      - network_swarm_public
+    environment:
+      ##########################################
+      # Nome do Setup
+      ##########################################
+      - INSTALLATION_NAME=chatwoot
+      # Ambiente de Execução do Node
+      - NODE_ENV=production
+      # Ambiente de Execução do Rails
+      - RAILS_ENV=production
+      # Tipo de Instalação
+      - INSTALLATION_ENV=docker
+      # Chave de Segurança
+      - SECRET_KEY_BASE=10761d391c9242358392d5ccaa9de45f
+      # URL do Frontend
+      - FRONTEND_URL=https://{BaseUrl_chatwoot}
+      # Configura o idioma padrão
+      - DEFAULT_LOCALE=en
+      # Configura o SSL
+      - FORCE_SSL=true
+      # Configura a criação de novas contas
+      - ENABLE_ACCOUNT_SIGNUP=false
+      # Configura o Log
+      - RAILS_LOG_TO_STDOUT=true
+      # Configura o Avatar do Bot
+      - USE_INBOX_AVATAR_FOR_BOT=true
+      ##########################################
+      # Configura o Redis
+      ##########################################
+      # Configura o Redis
+      - REDIS_URL=redis://redis:6379
+      # Se você habilitou a senha do redis
+      # - REDIS_PASSWORD=
+      ##########################################
+      # Configura o Banco de Dados
+      ##########################################
+      # Configura o endereço do Postgres ou PgBouncer
+      - POSTGRES_HOST=postgres
+      # Configura o Usuário do Postgres
+      - POSTGRES_USERNAME=postgres
+      # Configura a Senha do Postgres
+      - POSTGRES_PASSWORD={Senha_Postgres}
+      # Configura o Banco de Dados do Postgres
+      - POSTGRES_DATABASE=chatwoot
+      ##########################################
+      # Configurações do Email
+      # Endereço de Remetente
+      - SMTP_USERNAME=8141e4001@smtp-brevo.com
+      - SMTP_PASSWORD={Senha_SMTP}
+      - SMTP_PORT=587
+      - SMTP_ADDRESS=smtp-relay.brevo.com
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - SMTP_AUTHENTICATION=plain
+      - MAILER_SENDER_EMAIL=contato@phasprodutosnaturais.com.br
+      ##########################################
+      # Configura o Minio
+      ##########################################
+      # Seleciona o Tipo de Storage
+      - ACTIVE_STORAGE_SERVICE=s3_compatible
+      # Nome do Bucket do Minio
+      - STORAGE_BUCKET_NAME=chatwoot
+      # Access Key do Minio
+      - STORAGE_ACCESS_KEY_ID={Usuario_Minio}
+      # Secret Key do Minio
+      - STORAGE_SECRET_ACCESS_KEY={Senha_Minio}
+      # Região
+      - STORAGE_REGION=nyc3
+      # Endereço Público do Minio
+      - STORAGE_ENDPOINT=https://{BaseUrl_Publica_Minio}
+      # Força a usar o caminho na URL (obrigatório pro minio)
+      - STORAGE_FORCE_PATH_STYLE=true
+    # Configura o Modo de Deploy da Aplicação
+    deploy:
+      mode: replicated # sempre como replicated
+      replicas: 1 # geralmente somente 1 réplica
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          # Define a quantidade de CPU para o CodeChat para evitar travamento do Host
+          cpus: "1"
+          # Define a quantidade de RAM para o CodeChat para evitar travamento do Host
+          memory: 1024M
+
+volumes:
+  chatwoot_data:
+    external: true
+    name: chatwoot_data
+
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public
